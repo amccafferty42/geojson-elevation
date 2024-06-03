@@ -3,6 +3,8 @@ const express = require('express');
 const app = express();
 const port = 8080;
 
+let coordinates = [];
+
 app.listen(port, () => {
     console.log(`GeoJSON Elevation listening on port ${port}`);
 });
@@ -10,8 +12,16 @@ app.listen(port, () => {
 app.use(express.json({limit: '50mb'}));
 
 app.post('/geojson', (req, res) => {
+    for (feature of req.body.features) {
+        if (feature.geometry && feature.geometry.coordinates) {
+            for (coordinatePair of feature.geometry.coordinates) {
+                coordinates.push(coordinatePair);
+                console.log(coordinatePair);
+            }
+        }
+    }
   res.json({requestBody: req.body});
-})
+});
 
 //const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=');
 
