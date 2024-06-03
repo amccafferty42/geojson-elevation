@@ -20,7 +20,7 @@ app.post('/geojson', (req, res) => {
             }
         }
     }
-  res.json({requestBody: req.body});
+  res.json({requestBody: coordinates});
 });
 
 //const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=');
