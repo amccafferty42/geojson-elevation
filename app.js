@@ -41,7 +41,7 @@ app.post('/geojson', (req, res) => {
   res.json({requestBody: req.body})  // <==== req.body will be a parsed JSON object
 })
 
-const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=AIzaSyAX_e65YMJ9sw-Uzz5RlZPK5Dvz9k46lW8');
+//const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=');
 
 // const req = https.request(options, function(res) {
 //   console.log('STATUS: ' + res.statusCode);
@@ -53,9 +53,6 @@ const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?loc
 // }).end();
 
 
-
-
-// AIzaSyAX_e65YMJ9sw-Uzz5RlZPK5Dvz9k46lW8
 // https://maps.googleapis.com/maps/api/elevation/json
 //   ?locations=39.7391536%2C-104.9847034
 //   &key=YOUR_API_KEY
