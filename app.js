@@ -1,44 +1,16 @@
-const { createServer } = require('node:http');
-const https = require('https');
-const fs = require("fs");
-const express = require('express')
+const express = require('express');
 
 const app = express();
 const port = 8080;
-// const server = createServer((req, res) => {
-//   if (req.url === '/') {
-//     res.statusCode = 200;
-//     res.setHeader('Content-Type', 'text/plain');
-//     res.end('Hello World');
-//   } else if (req.url === '/geojson') {
-//     // console.log(req);
-//     res.statusCode = 200;
-//     res.setHeader('Content-Type', 'text/plain');
-//     res.end(req);
-//       // fs.readFile("./views/index.html", (error, html) => {
-//       //     if (error) throw error;
-//       //     response.write(html);
-//       //     return response.end();
-//       // });
-//   }
-  
-// });
 
-// server.listen(port, hostname, () => {
-//   console.log(`Server running at http://${hostname}:${port}/`);
-// });
-
-// 1. create a public github repo
-// 2. create package.json
-// 3. install express
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+    console.log(`GeoJSON Elevation listening on port ${port}`);
 });
 
-app.use(express.json({limit: '50mb'}))    // <==== parse request body as JSON
+app.use(express.json({limit: '50mb'}));
 
 app.post('/geojson', (req, res) => {
-  res.json({requestBody: req.body})  // <==== req.body will be a parsed JSON object
+  res.json({requestBody: req.body});
 })
 
 //const options = new URL('https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=');
@@ -52,7 +24,10 @@ app.post('/geojson', (req, res) => {
 //   });
 // }).end();
 
+// fs.readFile("./views/index.html", (error, html) => {
+//     if (error) throw error;
+//     response.write(html);
+//     return response.end();
+// });
 
-// https://maps.googleapis.com/maps/api/elevation/json
-//   ?locations=39.7391536%2C-104.9847034
-//   &key=YOUR_API_KEY
+// https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536%2C-104.9847034&key=YOUR_API_KEY
