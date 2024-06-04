@@ -16,6 +16,8 @@ app.use(express.json({limit: '50mb'}));
 app.post('/geojson', async (req, res) => {
     const updatedGeoJSON = await processGeoJSON(req);
     res.json(updatedGeoJSON.body);
+    console.log('processed ' + allCoordinates.length / 2 + ' total coordinates');
+    console.log('processed ' + allElevations.length + ' total elevations');
 });
 
 async function processGeoJSON(geoJSON) {
@@ -31,8 +33,10 @@ function appendElevation(request) {
     for (feature of request.body.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             for (coordinates of feature.geometry.coordinates) {
-                coordinates[2] = allElevations[i];
-                i++;
+                if (coordinates[0] != undefined && coordinates[1] != undefined) {
+                    coordinates[2] = allElevations[i];
+                    i++;
+                }
             }
         }
     }
@@ -46,20 +50,23 @@ function generateElevationAPIRequests(request) {
     for (feature of request.body.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             for (coordinates of feature.geometry.coordinates) {
-                allCoordinates.push(coordinates[0]);
-                allCoordinates.push(coordinates[1]);
-                locationsString = locationsString + coordinates[0] + "," + coordinates[1] + "|";
-
-                // Google Elevation API limit per request is 512 coordinates
-                if (allCoordinates.length % 1024 == 0) {
-                    locationsString = locationsString.slice(0, locationsString.length - 1);
-                    optionsString = optionsString + locationsString + "&key=AIzaSyAX_e65YMJ9sw-Uzz5RlZPK5Dvz9k46lW8";
-                    options = new URL(optionsString);
-
-                    elevationRequests.push(options);
-
-                    optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
-                    locationsString = "locations=";
+                if (coordinates[0] != undefined && coordinates[1] != undefined) {
+                    allCoordinates.push(coordinates[0]);
+                    allCoordinates.push(coordinates[1]);
+                    locationsString = locationsString + coordinates[0] + "," + coordinates[1] + "|";
+    
+                    // Google Elevation API limit per request is 512 coordinates
+                    if (allCoordinates.length % 1024 == 0) {
+                        locationsString = locationsString.slice(0, locationsString.length - 1);
+                        optionsString = optionsString + locationsString + "&key=";
+                        options = new URL(optionsString);
+    
+                        console.log(optionsString);
+                        elevationRequests.push(options);
+    
+                        optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
+                        locationsString = "locations=";
+                    }
                 }
             }
         }
@@ -69,6 +76,7 @@ function generateElevationAPIRequests(request) {
     if (locationsString != "locations=") {
         locationsString = locationsString.slice(0, locationsString.length - 1);
         optionsString = optionsString + locationsString + "&key=AIzaSyAX_e65YMJ9sw-Uzz5RlZPK5Dvz9k46lW8";
+        console.log(optionsString);
         options = new URL(optionsString);
         elevationRequests.push(options);
     }
