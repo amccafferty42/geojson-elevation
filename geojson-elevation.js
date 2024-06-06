@@ -4,6 +4,15 @@ const https = require('https');
 const app = express();
 const port = 8080;
 
+const API_KEY = process.argv[2].match("API_KEY=") ? process.argv[2].slice(8) : undefined;
+
+if (API_KEY) {
+    console.info("Using API_key=" + API_KEY);
+} else {
+    console.error("Usage: `node geojson-elevation.js API_KEY=[YOUR_API_KEY]`");
+    process.exit(1);
+}
+
 let allCoordinates = [];
 let allElevations = [];
 
@@ -16,8 +25,6 @@ app.use(express.json({limit: '50mb'}));
 app.post('/geojson', async (req, res) => {
     const updatedGeoJSON = await processGeoJSON(req);
     res.json(updatedGeoJSON.body);
-    console.log('processed ' + allCoordinates.length / 2 + ' total coordinates');
-    console.log('processed ' + allElevations.length + ' total elevations');
 });
 
 async function processGeoJSON(geoJSON) {
@@ -32,11 +39,14 @@ function appendElevation(request) {
     let i = 0;
     for (feature of request.body.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
-            for (coordinates of feature.geometry.coordinates) {
-                if (coordinates[0] != undefined && coordinates[1] != undefined) {
+            if (Array.isArray(feature.geometry.coordinates[0])) {
+                for (coordinates of feature.geometry.coordinates) {
                     coordinates[2] = allElevations[i];
                     i++;
                 }
+            } else {
+                feature.geometry.coordinates[2] = allElevations[i];
+                i++;
             }
         }
     }
@@ -49,8 +59,8 @@ function generateElevationAPIRequests(request) {
     const elevationRequests = [];
     for (feature of request.body.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
-            for (coordinates of feature.geometry.coordinates) {
-                if (coordinates[0] != undefined && coordinates[1] != undefined) {
+            if (Array.isArray(feature.geometry.coordinates[0])) {
+                for (coordinates of feature.geometry.coordinates) {
                     allCoordinates.push(coordinates[0]);
                     allCoordinates.push(coordinates[1]);
                     locationsString = locationsString + coordinates[0] + "," + coordinates[1] + "|";
@@ -58,15 +68,29 @@ function generateElevationAPIRequests(request) {
                     // Google Elevation API limit per request is 512 coordinates
                     if (allCoordinates.length % 1024 == 0) {
                         locationsString = locationsString.slice(0, locationsString.length - 1);
-                        optionsString = optionsString + locationsString + "&key=";
+                        optionsString = optionsString + locationsString + "&key=" + API_KEY;
                         options = new URL(optionsString);
     
-                        console.log(optionsString);
                         elevationRequests.push(options);
     
                         optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
                         locationsString = "locations=";
                     }
+                }
+            } else {
+                allCoordinates.push(feature.geometry.coordinates[0]);
+                allCoordinates.push(feature.geometry.coordinates[1]);
+                locationsString = locationsString + feature.geometry.coordinates[0] + "," + feature.geometry.coordinates[1] + "|";
+                // Google Elevation API limit per request is 512 coordinates
+                if (allCoordinates.length % 1024 == 0) {
+                    locationsString = locationsString.slice(0, locationsString.length - 1);
+                    optionsString = optionsString + locationsString + "&key=" + API_KEY;
+                    options = new URL(optionsString);
+
+                    elevationRequests.push(options);
+
+                    optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
+                    locationsString = "locations=";
                 }
             }
         }
@@ -75,13 +99,13 @@ function generateElevationAPIRequests(request) {
     // Create one final request URL with the remaining coordinates
     if (locationsString != "locations=") {
         locationsString = locationsString.slice(0, locationsString.length - 1);
-        optionsString = optionsString + locationsString + "&key=AIzaSyAX_e65YMJ9sw-Uzz5RlZPK5Dvz9k46lW8";
-        console.log(optionsString);
+        optionsString = optionsString + locationsString + "&key=" + API_KEY;
         options = new URL(optionsString);
         elevationRequests.push(options);
     }
     return elevationRequests;
 }
+
 
 async function getElevations(options) {
     return new Promise((resolve, reject) => {
