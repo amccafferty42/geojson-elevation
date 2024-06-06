@@ -7,7 +7,7 @@ const port = 8080;
 const API_KEY = process.argv[2].match("API_KEY=") ? process.argv[2].slice(8) : undefined;
 
 if (API_KEY) {
-    console.info("Using API_key=" + API_KEY);
+    console.info("Using API_KEY=" + API_KEY);
 } else {
     console.error("Usage: `node geojson-elevation.js API_KEY=[YOUR_API_KEY]`");
     process.exit(1);
