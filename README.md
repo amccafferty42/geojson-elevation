@@ -1,5 +1,5 @@
 # GeoJSON-elevation
-Quick and dirty script for adding elevation data to GeoJSON
+Script for adding elevation data to GeoJSON feature collection, leveraging Google's Elevation API.
 
 # Usage
 1. Setup a Google Cloud project and copy your API_KEY https://developers.google.com/maps/documentation/elevation/cloud-setup
