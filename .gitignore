@@ -1,2 +1,4 @@
 /node_modules
 /secrets.txt
+/test-file.json
+/test-file-copy.json

@@ -1,31 +1,44 @@
-const express = require('express');
 const https = require('https');
-
-const app = express();
-const port = 8080;
+const fs = require('fs');
 
 const API_KEY = process.argv[2].match("API_KEY=") ? process.argv[2].slice(8) : undefined;
-
-if (API_KEY) {
-    console.info("Using API_KEY=" + API_KEY);
-} else {
-    console.error("Usage: `node geojson-elevation.js API_KEY=[YOUR_API_KEY]`");
-    process.exit(1);
-}
+const FILE_PATH = process.argv[3].match("FILE_PATH=") ? process.argv[3].slice(10) : undefined;
 
 let allCoordinates = [];
 let allElevations = [];
 
-app.listen(port, () => {
-    console.log(`GeoJSON Elevation listening on port ${port}`);
-});
+if (API_KEY && FILE_PATH) {
+    console.info("API_KEY=" + API_KEY);
+    console.info("FILE_PATH=" + FILE_PATH);
+    readFile();
+} else {
+    console.error("Usage: `node geojson-elevation.js API_KEY=[YOUR_API_KEY] FILE_PATH=[PATH_TO_YOUR_GEOJSON_FILE]`");
+    process.exit(1);
+}
 
-app.use(express.json({limit: '50mb'}));
+function readFile() {
+    fs.readFile(FILE_PATH, 'utf8', (error, data) => {
+        if (error) {
+            console.error('An error occurred while reading the file:', error);
+            return;
+        }
+        write(JSON.parse(data));
+    });
+}
 
-app.post('/geojson', async (req, res) => {
-    const updatedGeoJSON = await processGeoJSON(req);
-    res.json(updatedGeoJSON.body);
-});
+async function write(geoJSON) {
+    let updatedGeoJSON = await processGeoJSON(geoJSON);
+
+    updatedGeoJSON = JSON.stringify(updatedGeoJSON);
+
+    fs.writeFile(FILE_PATH, updatedGeoJSON, 'utf8', (error) => {
+        if (error) {
+            console.error('An error occurred while writing to the file:', error);
+            return;
+        }
+        console.log('File has been written successfully.');
+    });
+}
 
 async function processGeoJSON(geoJSON) {
     const elevationRequests = generateElevationAPIRequests(geoJSON);
@@ -37,7 +50,7 @@ async function processGeoJSON(geoJSON) {
 
 function appendElevation(request) {
     let i = 0;
-    for (feature of request.body.features) {
+    for (feature of request.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             if (Array.isArray(feature.geometry.coordinates[0])) {
                 for (coordinates of feature.geometry.coordinates) {
@@ -57,7 +70,7 @@ function generateElevationAPIRequests(request) {
     let optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
     let locationsString = "locations=";
     const elevationRequests = [];
-    for (feature of request.body.features) {
+    for (feature of request.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             if (Array.isArray(feature.geometry.coordinates[0])) {
                 for (coordinates of feature.geometry.coordinates) {
