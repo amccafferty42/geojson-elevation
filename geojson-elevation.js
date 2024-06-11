@@ -74,9 +74,9 @@ function generateElevationAPIRequests(request) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             if (Array.isArray(feature.geometry.coordinates[0])) {
                 for (coordinates of feature.geometry.coordinates) {
-                    allCoordinates.push(coordinates[0]);
                     allCoordinates.push(coordinates[1]);
-                    locationsString = locationsString + coordinates[0] + "," + coordinates[1] + "|";
+                    allCoordinates.push(coordinates[0]);
+                    locationsString = locationsString + coordinates[1] + "," + coordinates[0] + "|";
     
                     // Google Elevation API limit per request is 512 coordinates
                     if (allCoordinates.length % 1024 == 0) {
@@ -126,6 +126,7 @@ async function getElevations(options) {
         https.request(options, async function(elevationAPIResponse) {
             console.log('STATUS: ' + elevationAPIResponse.statusCode);
             console.log('HEADERS: ' + JSON.stringify(elevationAPIResponse.headers));
+            if (elevationAPIResponse.error_message) console.log('ERROR_MESSAGE: ' + elevationAPIResponse.error_message);
             elevationAPIResponse.setEncoding('utf8');
             for await (const chunk of elevationAPIResponse) {
                 body += chunk;
