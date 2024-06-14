@@ -76,10 +76,9 @@ function generateElevationAPIRequests(request) {
                 for (coordinates of feature.geometry.coordinates) {
                     allCoordinates.push(coordinates[1]);
                     allCoordinates.push(coordinates[0]);
-                    locationsString = locationsString + coordinates[1] + "," + coordinates[0] + "|";
-    
+                    locationsString = locationsString + coordinates[1].toFixed(9) + "," + coordinates[0].toFixed(9) + "|";
                     // Google Elevation API limit per request is 512 coordinates
-                    if (allCoordinates.length % 1024 == 0) {
+                    if (allCoordinates.length % 512 == 0) {
                         locationsString = locationsString.slice(0, locationsString.length - 1);
                         optionsString = optionsString + locationsString + "&key=" + API_KEY;
                         options = new URL(optionsString);
@@ -91,11 +90,11 @@ function generateElevationAPIRequests(request) {
                     }
                 }
             } else {
-                allCoordinates.push(feature.geometry.coordinates[0]);
                 allCoordinates.push(feature.geometry.coordinates[1]);
-                locationsString = locationsString + feature.geometry.coordinates[0] + "," + feature.geometry.coordinates[1] + "|";
+                allCoordinates.push(feature.geometry.coordinates[0]);
+                locationsString = locationsString + feature.geometry.coordinates[1].toFixed(9) + "," + feature.geometry.coordinates[0].toFixed(9) + "|";
                 // Google Elevation API limit per request is 512 coordinates
-                if (allCoordinates.length % 1024 == 0) {
+                if (allCoordinates.length % 512 == 0) {
                     locationsString = locationsString.slice(0, locationsString.length - 1);
                     optionsString = optionsString + locationsString + "&key=" + API_KEY;
                     options = new URL(optionsString);
