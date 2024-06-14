@@ -1,10 +1,10 @@
 const https = require('https');
 const fs = require('fs');
 
+const BASE_URL = "https://maps.googleapis.com/maps/api/elevation/json?";
 const API_KEY = process.argv[2].match("API_KEY=") ? process.argv[2].slice(8) : undefined;
 const FILE_PATH = process.argv[3].match("FILE_PATH=") ? process.argv[3].slice(10) : undefined;
 
-let allCoordinates = [];
 let allElevations = [];
 
 if (API_KEY && FILE_PATH) {
@@ -67,60 +67,46 @@ function appendElevation(request) {
 }
 
 function generateElevationAPIRequests(request) {
-    let optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
-    let locationsString = "locations=";
-    const elevationRequests = [];
+    let elevationRequests = [];
+    let numCoordinatePairs = 0;
+    let locationsString = "";
     for (feature of request.features) {
         if (feature.geometry != undefined && feature.geometry.coordinates != undefined) {
             if (Array.isArray(feature.geometry.coordinates[0])) {
                 for (coordinates of feature.geometry.coordinates) {
-                    allCoordinates.push(coordinates[1]);
-                    allCoordinates.push(coordinates[0]);
-                    locationsString = locationsString + coordinates[1].toFixed(12) + "," + coordinates[0].toFixed(12) + "|";
-                    // Google Elevation API limit per request is 512 coordinates
-                    if (allCoordinates.length % 1024 == 0) {
-                        locationsString = locationsString.slice(0, locationsString.length - 1);
-                        optionsString = optionsString + locationsString + "&key=" + API_KEY;
-                        options = new URL(optionsString);
-    
-                        elevationRequests.push(options);
-    
-                        optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
-                        locationsString = "locations=";
+                    numCoordinatePairs++;
+                    locationsString = locationsString + coordinates[1] + "," + coordinates[0] + "|";
+                    if (numCoordinatePairs == 512) {
+                        elevationRequests.push(getRequestUrl(locationsString.slice(0, locationsString.length - 1)));
+                        numCoordinatePairs = 0;
+                        locationsString = "";
                     }
                 }
             } else {
-                allCoordinates.push(feature.geometry.coordinates[1]);
-                allCoordinates.push(feature.geometry.coordinates[0]);
-                locationsString = locationsString + feature.geometry.coordinates[1].toFixed(12) + "," + feature.geometry.coordinates[0].toFixed(12) + "|";
-                // Google Elevation API limit per request is 512 coordinates
-                if (allCoordinates.length % 1024 == 0) {
-                    locationsString = locationsString.slice(0, locationsString.length - 1);
-                    optionsString = optionsString + locationsString + "&key=" + API_KEY;
-                    options = new URL(optionsString);
-
-                    elevationRequests.push(options);
-
-                    optionsString = "https://maps.googleapis.com/maps/api/elevation/json?";
-                    locationsString = "locations=";
+                numCoordinatePairs++;
+                locationsString = locationsString + feature.geometry.coordinates[1] + "," + feature.geometry.coordinates[0] + "|";
+                if (numCoordinatePairs == 512) {
+                    elevationRequests.push(getRequestUrl(locationsString.slice(0, locationsString.length - 1)));
+                    numCoordinatePairs = 0;
+                    locationsString = "";
                 }
             }
         }
     }
-
     // Create one final request URL with the remaining coordinates
-    if (locationsString != "locations=") {
-        locationsString = locationsString.slice(0, locationsString.length - 1);
-        optionsString = optionsString + locationsString + "&key=" + API_KEY;
-        options = new URL(optionsString);
-        elevationRequests.push(options);
+    if (numCoordinatePairs > 0) {
+        elevationRequests.push(getRequestUrl(locationsString.slice(0, locationsString.length - 1)));
     }
     return elevationRequests;
 }
 
+function getRequestUrl(locations) {
+    return new URL(BASE_URL + "locations=" + locations + "&key=" + API_KEY);
+}
 
 async function getElevations(options) {
-    return new Promise((resolve, reject) => {
+    console.log("Google Elevation API Request");
+    return new Promise((resolve) => {
         let body = '';
         https.request(options, async function(elevationAPIResponse) {
             console.log('STATUS: ' + elevationAPIResponse.statusCode);
