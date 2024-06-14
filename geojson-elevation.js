@@ -13,7 +13,6 @@ if (API_KEY && FILE_PATH) {
     readFile();
 } else {
     console.error("Usage: `node geojson-elevation.js API_KEY=[YOUR_API_KEY] FILE_PATH=[PATH_TO_YOUR_GEOJSON_FILE]`");
-    process.exit(1);
 }
 
 function readFile() {
@@ -22,21 +21,20 @@ function readFile() {
             console.error('An error occurred while reading the file:', error);
             return;
         }
+        console.log('File has been read successfully');
         write(JSON.parse(data));
     });
 }
 
 async function write(geoJSON) {
     let updatedGeoJSON = await processGeoJSON(geoJSON);
-
     updatedGeoJSON = JSON.stringify(updatedGeoJSON);
-
     fs.writeFile(FILE_PATH, updatedGeoJSON, 'utf8', (error) => {
         if (error) {
             console.error('An error occurred while writing to the file:', error);
             return;
         }
-        console.log('File has been written successfully.');
+        console.log('File has been written successfully');
     });
 }
 
