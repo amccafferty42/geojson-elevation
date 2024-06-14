@@ -73,8 +73,8 @@ function generateElevationAPIRequests(request) {
             if (Array.isArray(feature.geometry.coordinates[0])) {
                 for (coordinates of feature.geometry.coordinates) {
                     numCoordinatePairs++;
-                    coordinates[0] = coordinates[0].toString().length > 12 ? coordinates[0].toFixed(12) : coordinates[0];
-                    coordinates[1] = coordinates[1].toString().length > 12 ? coordinates[1].toFixed(12) : coordinates[1];
+                    coordinates[0] = coordinates[0].toString().length > 12 ? parseFloat(coordinates[0].toFixed(12)) : coordinates[0];
+                    coordinates[1] = coordinates[1].toString().length > 12 ? parseFloat(coordinates[1].toFixed(12)) : coordinates[1];
                     locationsString = locationsString + coordinates[1] + "," + coordinates[0] + "|";
                     if (numCoordinatePairs == 512) {
                         elevationRequests.push(getRequestUrl(locationsString.slice(0, locationsString.length - 1)));
@@ -84,8 +84,8 @@ function generateElevationAPIRequests(request) {
                 }
             } else {
                 numCoordinatePairs++;
-                feature.geometry.coordinates[0] = feature.geometry.coordinates[0].toString().length > 12 ? feature.geometry.coordinates[0].toFixed(12) : feature.geometry.coordinates[0];
-                feature.geometry.coordinates[1] = feature.geometry.coordinates[1].toString().length > 12 ? feature.geometry.coordinates[1].toFixed(12) : feature.geometry.coordinates[1];
+                feature.geometry.coordinates[0] = feature.geometry.coordinates[0].toString().length > 12 ? parseFloat(feature.geometry.coordinates[0].toFixed(12)) : feature.geometry.coordinates[0];
+                feature.geometry.coordinates[1] = feature.geometry.coordinates[1].toString().length > 12 ? parseFloat(feature.geometry.coordinates[1].toFixed(12)) : feature.geometry.coordinates[1];
                 locationsString = locationsString + feature.geometry.coordinates[1] + "," + feature.geometry.coordinates[1] + "|";
                 if (numCoordinatePairs == 512) {
                     elevationRequests.push(getRequestUrl(locationsString.slice(0, locationsString.length - 1)));
